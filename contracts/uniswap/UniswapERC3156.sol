@@ -24,8 +24,8 @@ contract UniswapERC3156 is IERC3156FlashLender, UniswapV2FlashBorrowerLike {
     address permissionedPairAddress;
 
     // DEFAULT TOKENS
-    address weth;
-    address dai;
+    address weth; // wFTM
+    address dai; // fUSD
 
     /// @param factory_ Uniswap v2 UniswapV2Factory address
     /// @param weth_ Weth contract used in Uniswap v2 Pairs

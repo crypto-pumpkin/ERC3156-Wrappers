@@ -1,101 +1,69 @@
-const fs = require('fs')
-const path = require('path')
-require('@nomiclabs/hardhat-truffle5')
-require('solidity-coverage')
-require('hardhat-gas-reporter')
-require('hardhat-deploy')
-require('@nomiclabs/hardhat-etherscan')
+require("@nomiclabs/hardhat-waffle");
+require('hardhat-contract-sizer');
+require('@nomiclabs/hardhat-etherscan');
 
+require('dotenv').config();
 
-// REQUIRED TO ENSURE METADATA IS SAVED IN DEPLOYMENTS (because solidity-coverage disable it otherwise)
-const {
-  TASK_COMPILE_GET_COMPILER_INPUT
-} = require("hardhat/builtin-tasks/task-names");
-task(TASK_COMPILE_GET_COMPILER_INPUT).setAction(async (_, bre, runSuper) => {
-  const input = await runSuper();
-  input.settings.metadata.useLiteralContent = bre.network.name !== "coverage";
-  return input;
-})
+// This is a sample Buidler task. To learn how to create your own go to
+// https://buidler.dev/guides/create-task.html
+task("accounts", "Prints the list of accounts", async () => {
+  const accounts = await ethers.getSigners();
 
-
-function nodeUrl(network) {
-  let infuraKey
-  try {
-    infuraKey = fs.readFileSync(path.resolve(__dirname, '.infuraKey')).toString().trim()
-  } catch(e) {
-    infuraKey = ''
+  for (const account of accounts) {
+    console.log(await account.getAddress());
   }
-  return `https://${network}.infura.io/v3/${infuraKey}`
-}
-
-let mnemonic = process.env.MNEMONIC;
-if (!mnemonic) {
-  try {
-    mnemonic = fs.readFileSync(path.resolve(__dirname, '.secret')).toString().trim()
-  } catch(e){}
-}
-const accounts = mnemonic ? {
-  mnemonic,
-}: undefined;
-
-let etherscanKey = process.env.ETHERSCANKEY;
-if (!etherscanKey) {
-  try {
-    etherscanKey = fs.readFileSync(path.resolve(__dirname, '.etherscanKey')).toString().trim()
-  } catch(e){}
-}
+});
 
 module.exports = {
-  defaultNetwork: 'hardhat',
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
+  },
+  optimizer: {
+    enabled: true,
+    runs: 200,
+  },
+  // defaultNetwork: "hardhat",
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  },
   networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+      loggingEnabled: true,
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545", // same address and port for both Buidler and Ganache node
+      gas: 8000000,
+      gasLimit: 8000000,
+      gasPrice: 1,
+    },
     kovan: {
-      accounts,
-      url: nodeUrl('kovan')
-    },
-    goerli: {
-      accounts,
-      url: nodeUrl('goerli'),
-    },
-    rinkeby: {
-      accounts,
-      url: nodeUrl('rinkeby')
-    },
-    ropsten: {
-      accounts,
-      url: nodeUrl('ropsten')
+      url: process.env.KOVAN_INFURA_URL ? process.env.KOVAN_INFURA_URL : '',
+      accounts: process.env.KOVAN_DEV_PRIVATE_KEY ? [`0x${process.env.KOVAN_DEV_PRIVATE_KEY}`] : [],
+      gas: 8000000,
+      gasLimit: 8000000,
+      gasPrice: 31000000000,
     },
     mainnet: {
-      accounts,
-      url: nodeUrl('mainnet')
+      url: process.env.MAINNET_INFURA_URL ? process.env.MAINNET_INFURA_URL : '',
+      accounts: process.env.MAINNET_DEV_PRIVATE_KEY ? [`0x${process.env.MAINNET_DEV_PRIVATE_KEY}`] : [],
+      gasLimit: 8000000,
     },
-    coverage: {
-      url: 'http://127.0.0.1:8555',
+    fantom: {
+      url: 'https://rpcapi.fantom.network',
+      accounts: process.env.MAINNET_DEV_PRIVATE_KEY ? [`0x${process.env.MAINNET_DEV_PRIVATE_KEY}`] : [],
+      gas: 8000000,
+      gasLimit: 8000000,
     },
-  },
-  etherscan: {
-    apiKey: etherscanKey
   },
   solidity: {
-    version: '0.7.5',
+    version: "0.7.5",
     settings: {
       optimizer: {
-        enabled: true,
-        runs: 20000,
+        enabled: true
       }
     }
   },
-  gasReporter: {
-    enabled: true,
-  },
-  paths: {
-    sources: './contracts',
-    tests: './test',
-    cache: './cache',
-    coverage: './coverage',
-    coverageJson: './coverage.json',
-    artifacts: './artifacts',
-  },
-  namedAccounts: {
-    deployer: 0
-  }
-}
+};

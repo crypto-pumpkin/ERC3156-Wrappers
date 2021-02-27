@@ -17,6 +17,9 @@ build/
 .etherscanKey
 .infuraKey
 .secret
+.env
+
+Close
 
 # Solidity-coverage
 coverage/
